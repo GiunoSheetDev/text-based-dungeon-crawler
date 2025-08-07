@@ -106,16 +106,27 @@ int main() {
     }
     catch (...) {
     // Silently ignore all exceptions
+
+        system("cls");
+        system("figlet \"GAME OVER\"");
+        string scoreCommand = "figlet \"Score: " + to_string(handler.score) + "\"";
+        system(scoreCommand.c_str());
+
+        cout << "Press Enter to exit...";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.get();
+
     }   
 
 
     system("cls");
-
     system("figlet \"GAME OVER\"");
     string scoreCommand = "figlet \"Score: " + to_string(handler.score) + "\"";
     system(scoreCommand.c_str());
 
-    
+    cout << "Press Enter to exit...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin.get();
 
 
 
