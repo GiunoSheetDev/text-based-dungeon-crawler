@@ -4,12 +4,7 @@
 
 using namespace std;
 
-#define FLOOR 0
-#define WALL 1
-#define TREASURE 2
-#define ENEMY 3
-#define PLAYER 4
-
+#include "tiletypes.h"
 
 CaveGenerator::CaveGenerator(int width, int heigth) 
 :   rd(), gen(rd()), width(width), heigth(heigth),
@@ -19,7 +14,8 @@ CaveGenerator::CaveGenerator(int width, int heigth)
     iterations = 3;
     cellmap = vector<vector<int>> (heigth, vector<int>(width));
     lvl = 1;
-    enemyLimit = randint(7, 12) + 5*lvl;
+    enemyLimit = randint(7, 12) + randint(0, 2)*lvl;
+    powerUpLimit = 3;
 }
 
 int CaveGenerator::randint(int min, int max) {
@@ -126,10 +122,10 @@ void CaveGenerator::placeEnemies() {
     int placed = 0;
     int maxAttempts = 1000;  // Prevent infinite loops
     int attempts = 0;
-    int neighborLimit = 7;
+    int neighborLimit = 3;
 
     while (placed < enemyLimit && attempts < maxAttempts) {
-        if (attempts > 200) neighborLimit = 6;
+        if (attempts > 200) neighborLimit = 4;
         if (attempts > 400) neighborLimit = 5;
         int y = randint(1, cellmap.size() - 2);
         int x = randint(1, cellmap[0].size() - 2);
@@ -138,7 +134,7 @@ void CaveGenerator::placeEnemies() {
 
         if (currentCell == FLOOR) {
             int neighbors = getNeighbors(y, x);
-            if (neighbors < 5) {  
+            if (neighbors < neighborLimit) {  
                 cellmap[y][x] = ENEMY;
                 placed++;
             }
@@ -148,6 +144,35 @@ void CaveGenerator::placeEnemies() {
     }
 
 }
+
+void CaveGenerator::placePowerUps() {
+    int placed = 0;
+    int maxAttempts = 1000;
+    int attempts = 0;
+
+    while (placed < powerUpLimit && attempts < maxAttempts) {
+        int y = randint(1, cellmap.size()-2);
+        int x = randint(1, cellmap[0].size()-2);
+
+        int currentCell = cellmap[y][x];
+
+        if (currentCell == FLOOR) {
+            int neighbors = getNeighbors(y, x);
+
+            int chosenPU = randint(POWERUP_STOPTIME, POWERUP_OMNIDIRECTIONALBULLETS);
+
+            if (neighbors < 3) {
+                cellmap[y][x] = chosenPU;
+                placed ++;
+            }
+        }
+
+        attempts++;
+    }
+
+}
+
+
 
 void CaveGenerator::placePlayer() {
     for (int y = 0; y < cellmap.size(); y++) {
@@ -173,6 +198,7 @@ vector<vector<int>> CaveGenerator::generateMap(int lvl) {
         generationStep();
     }
     placeTreasures();
+    placePowerUps();
     placeEnemies();
     placePlayer();
 

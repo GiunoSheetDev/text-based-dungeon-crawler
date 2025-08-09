@@ -28,6 +28,7 @@ private:
     mt19937 gen;
     double fillProb;
     int enemyLimit;
+    int powerUpLimit;
     
     
     int randint(int min, int max);
@@ -38,6 +39,7 @@ private:
     vector<vector<int>> initMap();
     void generationStep();
     void placeTreasures();
+    void placePowerUps();
     void placeEnemies();
     void placePlayer();
 

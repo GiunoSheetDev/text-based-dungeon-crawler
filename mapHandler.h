@@ -27,6 +27,7 @@ class MapHandler {
         bool nextLvl;
         int score;
         
+        
         void setMap(vector<vector<int>> newMap);
 
         
@@ -40,6 +41,11 @@ class MapHandler {
         void updateEnemies();
         void updateBullets();
         int getTreasureCount();
+        void executePowerUp(int powerup);
+
+        bool isTimeStopped;
+        bool isOmniDirectionActive;
+
 
         
 
