@@ -2,11 +2,15 @@
 #include "mapHandler.h"
 
 #include <iostream>
+#include <limits>
 #include <cstdlib>
 #include <thread>
 #include <chrono>
 #include <conio.h>
 #include <string>
+
+
+
 
 using namespace std;
 
@@ -15,6 +19,10 @@ using namespace std;
 #define TREASURE 2
 #define ENEMY 3
 #define PLAYER 4
+#define BULLET_N 5
+#define BULLET_S 6
+#define BULLET_E 7
+#define BULLET_W 8
 
 #define NORTH 0
 #define SOUTH 1
@@ -46,6 +54,18 @@ void print(const vector<vector<int>>& cellmap) {
                 case PLAYER:
                     cout << "\033[32m" << " P " << "\033[0m";  // Green
                     break;
+                case BULLET_N:
+                    cout << "\033[34m" << " o " << "\033[0m";  // Blue
+                    break;
+                case BULLET_S:
+                    cout << "\033[34m" << " o " << "\033[0m";  // Blue
+                    break;
+                case BULLET_E:
+                    cout << "\033[34m" << " o " << "\033[0m";  // Blue
+                    break;
+                case BULLET_W:
+                    cout << "\033[34m" << " o " << "\033[0m";  // Blue
+                    break;
             }
         }
         cout << endl;
@@ -57,7 +77,6 @@ void print(const vector<vector<int>>& cellmap) {
 
 
 int main() {
-
     CaveGenerator generator(65, 45);
     
     
@@ -77,7 +96,7 @@ int main() {
             }
             
             print(handler.map);
-            cout << "WASD to move, IJKL to dig" << endl;
+            cout << "WASD to move, IJKL to dig / shoot" << endl;
             handler.update();
             
 
@@ -92,10 +111,22 @@ int main() {
                     case 's': handler.movePlayer(SOUTH); handler.score -= 1; break;
                     case 'a': handler.movePlayer(WEST); handler.score -= 1; break;
                     case 'd': handler.movePlayer(EAST); handler.score -= 1; break;
-                    case 'i': handler.breakWall(NORTH); handler.score -= 20; break;
-                    case 'k': handler.breakWall(SOUTH); handler.score -= 20; break;
-                    case 'j': handler.breakWall(WEST); handler.score -= 20; break;
-                    case 'l': handler.breakWall(EAST); handler.score -= 20; break;
+                    case 'i': {
+                        int x = handler.breakWall(NORTH); 
+                        handler.score -= (x == 0 ? 20 : 50);
+                        break;}
+                    case 'k': {
+                        int x = handler.breakWall(SOUTH); 
+                        handler.score -= (x == 0 ? 20 : 50);
+                        break;}
+                    case 'j':{
+                        int x = handler.breakWall(WEST); 
+                        handler.score -= (x == 0 ? 20 : 50);
+                        break;}
+                    case 'l': {
+                        int x = handler.breakWall(EAST); 
+                        handler.score -= (x == 0 ? 20 : 50);
+                        break;}
                     default: break;
                 }
             

@@ -13,6 +13,7 @@ class MapHandler {
     public:
         vector<vector<int>> map;
         vector<pair<int, int>> enemyList;
+        vector<vector<int>> bulletList;
         int currentLevel;
 
         explicit MapHandler(vector<vector<int>> map);
@@ -20,7 +21,7 @@ class MapHandler {
 
         pair<int, int> getPlayerPos();
         void movePlayer(int direction);
-        void breakWall(int direction);
+        int breakWall(int direction);
 
         bool isRunning;
         bool nextLvl;
@@ -35,8 +36,9 @@ class MapHandler {
         mt19937 gen;
 
         int randint(int min, int max);
-        void getEnemyList();
+        void getEnemyAndBulletList();
         void updateEnemies();
+        void updateBullets();
         int getTreasureCount();
 
         

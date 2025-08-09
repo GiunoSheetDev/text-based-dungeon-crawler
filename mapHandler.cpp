@@ -5,6 +5,12 @@
 
 
 #include <chrono>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include <algorithm> // for remove
+
+
 using namespace std;
 using namespace std::chrono;
 
@@ -20,12 +26,15 @@ using namespace std::chrono;
 #define TREASURE 2
 #define ENEMY 3
 #define PLAYER 4
-
+#define BULLET_N 5
+#define BULLET_S 6
+#define BULLET_E 7
+#define BULLET_W 8
 
 MapHandler::MapHandler(vector<vector<int>> grid) 
 : map(grid), rd(), gen(rd()) 
 {
-    getEnemyList();
+    getEnemyAndBulletList();
     isRunning = true;
     currentLevel = 1;
     nextLvl = false;
@@ -39,13 +48,13 @@ int MapHandler::randint(int min, int max) {
 }
 
 
-void MapHandler::getEnemyList() {
+void MapHandler::getEnemyAndBulletList() {
     for (int y = 0; y < map.size(); y++) {
         for (int x = 0; x < map[0].size(); x++) {
             int currentCell = map[y][x];
 
             if (currentCell == ENEMY) enemyList.push_back({y, x});
-            
+            if (currentCell == BULLET_N || currentCell == BULLET_S || currentCell == BULLET_E || currentCell == BULLET_W) bulletList.push_back({y, x, currentCell});
         }
 
     }
@@ -102,34 +111,63 @@ void MapHandler::movePlayer(int direction) {
 } 
 
 
-void MapHandler::breakWall(int direction) {
+int MapHandler::breakWall(int direction) {
     pair<int, int> playerPos = getPlayerPos();
     switch (direction) {
         case NORTH:
-            if (playerPos.first == 0) break;
+            if (playerPos.first == 0) return 0;
             if (map[playerPos.first-1][playerPos.second] == WALL)  {
                 map[playerPos.first-1][playerPos.second] = FLOOR;
+                return 0;
             } 
-            break;
+
+            if (map[playerPos.first-1][playerPos.second] == FLOOR || map[playerPos.first-1][playerPos.second] == ENEMY) {
+                map[playerPos.first-1][playerPos.second] = BULLET_N;
+                bulletList.push_back({playerPos.first-1, playerPos.second, BULLET_N});
+                return 1;
+            }
+            
         case SOUTH:
-            if (playerPos.first == map.size()-1) break;
-            if (map[playerPos.first+1][playerPos.second] == WALL) {
+            if (playerPos.first == map.size()-1) return 0;
+            if (map[playerPos.first+1][playerPos.second] == WALL)  {
                 map[playerPos.first+1][playerPos.second] = FLOOR;
+                return 0;
+            } 
+
+            if (map[playerPos.first+1][playerPos.second] == FLOOR || map[playerPos.first+1][playerPos.second] == ENEMY) {
+                map[playerPos.first+1][playerPos.second] = BULLET_S;
+                bulletList.push_back({playerPos.first+1, playerPos.second, BULLET_S});
+                return 1;
             }
-            break;
-        case EAST:
-            if (playerPos.second == map[0].size() -1 ) break;
-            if (map[playerPos.first][playerPos.second+1] == WALL) {
+        
+            case EAST:
+            if (playerPos.second == map[0].size() -1 ) return 0;
+            if (map[playerPos.first][playerPos.second+1] == WALL)  {
                 map[playerPos.first][playerPos.second+1] = FLOOR;
+                return 0;
+            } 
+
+            if (map[playerPos.first][playerPos.second+1] == FLOOR || map[playerPos.first][playerPos.second+1] == ENEMY) {
+                map[playerPos.first][playerPos.second+1] = BULLET_E;
+                bulletList.push_back({playerPos.first, playerPos.second+1, BULLET_E});
+                return 1;
             }
-            break;
+
         case WEST:
-            if (playerPos.second == 0) break;
-            if (map[playerPos.first][playerPos.second-1] == WALL) {
+            if (playerPos.second == 0) return 0;
+            if (map[playerPos.first][playerPos.second-1] == WALL)  {
                 map[playerPos.first][playerPos.second-1] = FLOOR;
+                return 0;
+            } 
+
+            if (map[playerPos.first][playerPos.second-1] == FLOOR || map[playerPos.first][playerPos.second-1] == ENEMY) {
+                map[playerPos.first][playerPos.second-1] = BULLET_W;
+                bulletList.push_back({playerPos.first, playerPos.second-1, BULLET_W});
+                return 1;
             }
-            break;
     }
+
+    return 0;
 }
 
 
@@ -193,23 +231,170 @@ void MapHandler::updateEnemies() {
     enemyList = newEnemyList;
 }
 
+void MapHandler::updateBullets() {
+    vector<vector<int>> newMap = map;
+    vector<vector<int>> newBulletList;
+
+    for (auto& coords : bulletList) {
+        int y = coords[0];
+        int x = coords[1];
+        int type = coords[2];
+
+        switch (type) {
+            case BULLET_N: {
+                int newY = y-1;
+                int newX = x;
+                
+                //case FLOOR, just move normally
+                if (map[newY][newX] == FLOOR ) {
+                    newMap[newY][newX] = BULLET_N;
+                    newMap[y][x] = FLOOR;
+                    newBulletList.push_back({newY, newX, type});
+                    break;
+                }
+
+                // case ENEMY, delete both enemy and bullet
+                else if (map[newY][newX] == ENEMY) {
+                    score += 150;
+                    newMap[newY][newX] = FLOOR;
+                    newMap[y][x] = FLOOR;
+                    enemyList.erase(remove(enemyList.begin(), enemyList.end(), make_pair(newY, newX)), enemyList.end());
+                    break;
+                }
+
+                // case WALL
+                else if (map[newY][newX] == WALL || map[newY][newX] == PLAYER || map[newY][newX] == TREASURE  || map[newY][newX] == BULLET_N || map[newY][newX] == BULLET_S || map[newY][newX] == BULLET_E || map[newY][newX] == BULLET_W) {
+                    newMap[y][x] = FLOOR;
+                    break;
+                }
+                break;
+            }
+            case BULLET_S: {
+                int newY = y+1;
+                int newX = x;
+                
+                //case FLOOR, just move normally
+                if (map[newY][newX] == FLOOR) {
+                    newMap[newY][newX] = BULLET_S;
+                    newMap[y][x] = FLOOR;
+                    newBulletList.push_back({newY, newX, type});
+                    break;
+                }
+
+                // case ENEMY, delete both enemy and bullet
+                else if (map[newY][newX] == ENEMY) {
+                    score += 150;
+                    newMap[newY][newX] = FLOOR;
+                    newMap[y][x] = FLOOR;
+                    enemyList.erase(remove(enemyList.begin(), enemyList.end(), make_pair(newY, newX)), enemyList.end());
+                    break;
+                }
+
+                // case WALL
+                else if (map[newY][newX] == WALL || map[newY][newX] == PLAYER || map[newY][newX] == TREASURE  || map[newY][newX] == BULLET_N || map[newY][newX] == BULLET_S || map[newY][newX] == BULLET_E || map[newY][newX] == BULLET_W) {
+                    newMap[y][x] = FLOOR;
+                    break;
+                }
+                break;
+            }
+            case BULLET_E: {
+                int newY = y;
+                int newX = x+1;
+                
+                //case FLOOR, just move normally
+                if (map[newY][newX] == FLOOR) {
+                    newMap[newY][newX] = BULLET_E;
+                    newMap[y][x] = FLOOR;
+                    newBulletList.push_back({newY, newX, type});
+                    break;
+                }
+
+                // case ENEMY, delete both enemy and bullet
+                else if (map[newY][newX] == ENEMY) {
+                    score += 150;
+                    newMap[newY][newX] = FLOOR;
+                    newMap[y][x] = FLOOR;
+                    enemyList.erase(remove(enemyList.begin(), enemyList.end(), make_pair(newY, newX)), enemyList.end());
+                    break;
+                }
+
+                // case WALL
+                else if (map[newY][newX] == WALL || map[newY][newX] == PLAYER|| map[newY][newX] == TREASURE  || map[newY][newX] == BULLET_N || map[newY][newX] == BULLET_S || map[newY][newX] == BULLET_E || map[newY][newX] == BULLET_W) {
+                    newMap[y][x] = FLOOR;
+                    break;
+                }
+                break;
+            }
+            case BULLET_W: {
+                int newY = y;
+                int newX = x-1;
+                
+                //case FLOOR, just move normally
+                if (map[newY][newX] == FLOOR) {
+                    newMap[newY][newX] = BULLET_W;
+                    newMap[y][x] = FLOOR;
+                    newBulletList.push_back({newY, newX, type});
+                    break;
+                }
+
+                // case ENEMY, delete both enemy and bullet
+                else if (map[newY][newX] == ENEMY) {
+                    score += 150;
+                    newMap[newY][newX] = FLOOR;
+                    newMap[y][x] = FLOOR;
+                    enemyList.erase(remove(enemyList.begin(), enemyList.end(), make_pair(newY, newX)), enemyList.end());
+                    break;
+                }
+
+                // case WALL
+                else if (map[newY][newX] == WALL || map[newY][newX] == PLAYER || map[newY][newX] == TREASURE  || map[newY][newX] == BULLET_N || map[newY][newX] == BULLET_S || map[newY][newX] == BULLET_E || map[newY][newX] == BULLET_W) {
+                    newMap[y][x] = FLOOR;
+                    break;
+                }
+                break;
+            }
+        }
+    }
+    map = newMap;
+    bulletList = newBulletList;
+}
+
+
+
+
+
+
+
+
 
 void MapHandler::setMap(vector<vector<int>> newMap) {
     map = newMap;
     enemyList.clear();
-    getEnemyList();
+    bulletList.clear();
+    getEnemyAndBulletList();
 }
 
 
 void MapHandler::update() {
-    static steady_clock::time_point lastUpdate = steady_clock::now();
+    static steady_clock::time_point lastUpdateEnemies = steady_clock::now();
+    static steady_clock::time_point lastUpdateBullets = steady_clock::now();
+
+
 
     steady_clock::time_point now = steady_clock::now();
-    auto elapsed = duration_cast<milliseconds>(now - lastUpdate).count();
+    auto elapsedEnemies = duration_cast<milliseconds>(now - lastUpdateEnemies).count();
+    auto elapsedBullets = duration_cast<milliseconds>(now - lastUpdateBullets).count();
 
-    if (elapsed >= 500) {  
+
+    if (elapsedBullets >= 100) {  
+        updateBullets();
+        lastUpdateBullets = now;
+    }
+
+
+    if (elapsedEnemies >= 500) {  
         updateEnemies();
-        lastUpdate = now;
+        lastUpdateEnemies = now;
     }
 
     if (getTreasureCount() == 0) nextLvl = true; currentLevel+=1;
