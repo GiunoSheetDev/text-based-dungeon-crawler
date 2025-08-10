@@ -105,14 +105,25 @@ void print(const vector<vector<int>>& cellmap) {
                 case BULLET_S:
                 case BULLET_E:
                 case BULLET_W:
+                case BULLET_NE:
+                case BULLET_NW:
+                case BULLET_SE:
+                case BULLET_SW:
                     cout << "\033[34m" << " o " << "\033[0m";  // Blue
                     break;
                 case POWERUP_STOPTIME:
                     cout << "\033[35m" << " % " << "\033[0m"; 
                     break;
                 case POWERUP_OMNIDIRECTIONALBULLETS:
-                    cout << "\033[35m" << " + " << "\033[0m"; 
+                    cout << "\033[35m" << " * " << "\033[0m"; 
                     break;
+                case POWERUP_CROSSDIRECTIONALBULLETS:
+                    cout << "\033[35m" << " + " << "\033[0m"; 
+                        break;
+                case POWERUP_XDIRECTIONALBULLETS:
+                    cout << "\033[35m" << " x " << "\033[0m"; 
+                    break;
+
             }       
         }
         cout << endl;
@@ -134,15 +145,27 @@ int main() {
 
     auto lastUpdate = chrono::steady_clock::now();
 
+    bool firstIteration = true;
+
+
     try {
         while (handler.isRunning) {
+
+            if (firstIteration) {
+                firstIteration = false;
+                vector<vector<int>> newMap = generator.generateMap(handler.currentLevel);
+                handler.setMap(newMap);
+                handler.score = 0;
+            }
+
+
             if (handler.nextLvl) {
                 vector<vector<int>> newMap = generator.generateMap(handler.currentLevel);
                 handler.setMap(newMap);
                 handler.nextLvl = false;
             }
 
-            print(handler.map);
+            print(handler.grid);
             cout << "WASD to move, IJKL to dig / shoot. Spacebar to restart." << endl;
             handler.update();
 

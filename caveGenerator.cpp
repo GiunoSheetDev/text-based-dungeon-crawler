@@ -159,7 +159,7 @@ void CaveGenerator::placePowerUps() {
         if (currentCell == FLOOR) {
             int neighbors = getNeighbors(y, x);
 
-            int chosenPU = randint(POWERUP_STOPTIME, POWERUP_OMNIDIRECTIONALBULLETS);
+            int chosenPU = randint(POWERUP_STOPTIME, POWERUP_CROSSDIRECTIONALBULLETS);
 
             if (neighbors < 3) {
                 cellmap[y][x] = chosenPU;
@@ -175,16 +175,7 @@ void CaveGenerator::placePowerUps() {
 
 
 void CaveGenerator::placePlayer() {
-    for (int y = 0; y < cellmap.size(); y++) {
-        for (int x = 0; x < cellmap[0].size(); x++) {
-            int currentCell = cellmap[y][x];
-
-            if (currentCell == FLOOR) {
-                cellmap[y][x] = PLAYER;
-                return;
-            } 
-        }
-    }
+    cellmap[0][0] = PLAYER;
 }
 
 

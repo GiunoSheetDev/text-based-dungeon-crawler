@@ -11,12 +11,12 @@ using namespace std;
 
 class MapHandler {
     public:
-        vector<vector<int>> map;
+        vector<vector<int>> grid;
         vector<pair<int, int>> enemyList;
         vector<vector<int>> bulletList;
         int currentLevel;
 
-        explicit MapHandler(vector<vector<int>> map);
+        explicit MapHandler(vector<vector<int>> grid);
         void update();
 
         pair<int, int> getPlayerPos();
@@ -45,6 +45,8 @@ class MapHandler {
 
         bool isTimeStopped;
         bool isOmniDirectionActive;
+        bool isXDirectionActive;
+        bool isCrossDirectionActive;
 
 
         
